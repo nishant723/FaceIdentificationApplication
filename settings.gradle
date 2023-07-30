@@ -14,5 +14,5 @@ dependencyResolutionManagement {
 }
 rootProject.name = "FaceIdentificationApplication"
 include ':app'
-include ':openCV'
-include ':newopencv'
+//include ':openCV'
+//include ':newopencv'

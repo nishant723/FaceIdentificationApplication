@@ -6,11 +6,11 @@ import nishant.lab.faceidentificationapplication.domain.repository.FaceRepositor
 import javax.inject.Inject
 
 class FaceRepositoryImpl @Inject constructor(private val faceDao: FaceDao)  : FaceRepository {
-    override suspend fun insertFace(face: Face) {
-        faceDao.insertFace(face)
+    override suspend fun insertFace(face: Face){
+      return  faceDao.insertFace(face)
     }
 
-    override suspend fun getNameByFace(): List<Face> {
+    override suspend fun getNameByFace(): Face {
         return faceDao.getAllFaces()
     }
 
