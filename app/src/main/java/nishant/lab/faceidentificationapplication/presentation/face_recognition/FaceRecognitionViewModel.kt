@@ -3,6 +3,7 @@ package nishant.lab.faceidentificationapplication.presentation.face_recognition
 import android.annotation.SuppressLint
 import android.app.Application
 import android.graphics.Bitmap
+import android.graphics.RectF
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -40,22 +41,26 @@ class FaceRecognitionViewModel @Inject constructor(private val faceRecognitionUs
                 .collect { result ->
                     when (result) {
 
-                        is Result.Success -> {
+                        is Resource.Success -> {
                             println("viewModel : ${result.data}")
                             faceResult.value = (FaceMatchingStatus(imageString = result.data))
                         }
-                        is Result.Error -> {
+                        is Resource.Error -> {
                             println("viewModel : ${result.message}")
-                            faceResult.value = (FaceMatchingStatus(error = result.message))
+                            faceResult.value = (FaceMatchingStatus(error = result.message!!))
                         }
-//                        is Result.Loading -> {
-//                            faceResult.value = FaceMatchingStatus(isLoading = true)
-//
-//                        }
+                        is Resource.Loading -> {
+                            faceResult.value = FaceMatchingStatus(isLoading = true)
+
+                        }
                     }
                 }
         }
     }
+
+
+
+
 
 
 

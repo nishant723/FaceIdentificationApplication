@@ -18,14 +18,32 @@ import nishant.lab.faceidentificationapplication.domain.model.Result
 class FaceAnalyzerUseCase @Inject constructor(private val faceAnalyzerRepository: FaceAnalyzerRepository) {
 
 
-  suspend fun analyzeFace(imageProxy : ImageProxy) : Result<Bitmap> {
-       return when (val result = faceAnalyzerRepository.analyzeFace(imageProxy = imageProxy).first()){
-           is Resource.Success -> Result.Success(result.data!!)
-           is Resource.Error -> Result.Error(result.message?:"unknown error ")
-          // is Resource.Loading -> Result.Loading("Loading")
-       }
+    @SuppressLint("UnsafeOptInUsageError")
+    suspend fun analyzeFace(imageProxy: ImageProxy): Resource<Bitmap> {
+        return try {
+            val resourceList = faceAnalyzerRepository.analyzeFace(imageProxy = imageProxy)
+                .toList()
 
-   }
+            if (resourceList.isEmpty()) {
+                Resource.Error("No face detected")
+            } else {
+                // Get the last emitted element as it represents the latest result
+                val lastResource = resourceList.last()
+                when (lastResource) {
+                    is Resource.Success -> Resource.Success(lastResource.data!!)
+                    is Resource.Error -> Resource.Error(lastResource.message ?: "Unknown error")
+                    is Resource.Loading -> Resource.Loading()
+                }
+            }
+        } catch (e: Throwable) {
+            Resource.Error(e.message ?: "An error occurred")
+        }
+    }
+
+
+
+
+
 
 
 

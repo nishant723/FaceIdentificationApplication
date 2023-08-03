@@ -2,6 +2,7 @@ package nishant.lab.faceidentificationapplication.presentation.util
 
 
 import android.annotation.SuppressLint
+import android.graphics.RectF
 import android.util.Log
 import android.util.SparseIntArray
 import android.view.Surface
@@ -23,12 +24,14 @@ class FaceAnalyzer : ImageAnalysis.Analyzer {
         val options = FaceDetectorOptions.Builder()
             .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
             .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_ALL)
-           // .setContourMode(FaceDetectorOptions.CONTOUR_MODE_ALL)
+            // .setContourMode(FaceDetectorOptions.CONTOUR_MODE_ALL)
             .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
             .build()
         faceDetector = FaceDetection.getClient(options)
 
     }
+
+    var detectedFaceRect: List<RectF> = emptyList()
 
     @SuppressLint("UnsafeOptInUsageError")
     override fun analyze(image: ImageProxy) {
@@ -40,7 +43,20 @@ class FaceAnalyzer : ImageAnalysis.Analyzer {
         if (inputImage != null) {
             faceDetector.process(inputImage)
                 .addOnSuccessListener { faces ->
+                    if(faces.size>=1){
 
+                        detectedFaceRect = faces.map { face ->
+
+                            val boundingBox = face.boundingBox
+                            val left = boundingBox.left.toFloat()
+                            val top = boundingBox.top.toFloat()
+                            val right = boundingBox.right.toFloat()
+                            val bottom = boundingBox.bottom.toFloat()
+                            RectF(left, top, right, bottom)
+                        }
+                        Log.d(TAG, "faceAnalyzeClass: $detectedFaceRect")
+
+                    }
                 }
                 .addOnFailureListener { exception ->
                     Log.e(TAG, "Face analysis failed: ${exception.message}", exception)

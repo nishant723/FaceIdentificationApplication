@@ -42,7 +42,7 @@ class FaceAnalyzerRepositoryImpl @Inject constructor(var  faceDetector: FaceDete
     @SuppressLint("UnsafeOptInUsageError")
     override fun analyzeFace(imageProxy: ImageProxy): Flow<Resource<Bitmap>> = flow {
        val mediaImage = imageProxy.image ?: kotlin.run {
-           emit(Resource.Error("No image available"))
+           emit(Resource.Error("No face available"))
            return@flow
        }
         val rotationDegree = imageProxy.imageInfo.rotationDegrees
@@ -58,31 +58,54 @@ class FaceAnalyzerRepositoryImpl @Inject constructor(var  faceDetector: FaceDete
                     }
             }
             println("Coroutine started in thread in analyzer repository: ${Thread.currentThread().name}")
-             // emit(Resource.Loading<Bitmap>())
+              emit(Resource.Loading<Bitmap>())
             if(faces.size>1) {
                 println("face size : ${faces.size}")
                 emit(Resource.Error<Bitmap>("Multiple face detected"))
             }else if (faces.isEmpty()){
                 emit(Resource.Error<Bitmap>("No face detected"))
             }else if (!isFaceCentered(face = faces[0], image = imageProxy)){
-                emit(Resource.Error<Bitmap>("face is not in center"))
+                emit(Resource.Error<Bitmap>("Face is not in center"))
             }else {
                 val bitmapResult = ImageConverter().toBitmap(image = imageProxy.image!!)
-                if(bitmapResult==null){
+                if (bitmapResult == null) {
                     emit(Resource.Error<Bitmap>("Error in converting bitmap"))
+                    return@flow
                 }
-                val cropImage = cropToBBox(bitmapResult!!,faces[0].boundingBox,rotationDegree)
-                if(cropImage==null){
+                val boundingBox = faces[0].boundingBox
+                if (boundingBox == null) {
+                    emit(Resource.Error<Bitmap>("Bounding box is null"))
+                    return@flow
+                }
+                if(boundingBox == null && bitmapResult == null && rotationDegree == null){
                     emit(Resource.Error<Bitmap>("Ensure entire face is within the circle"))
+                }else{
+                    val cropImage = cropToBBox(bitmapResult, boundingBox, rotationDegree)
+                    if (cropImage == null) {
+                        emit(Resource.Error<Bitmap>("Ensure entire face is within the circle"))
+                        return@flow
+                    }else {
+                        emit(Resource.Success<Bitmap>(cropImage))
+                    }
                 }
-                emit(Resource.Success<Bitmap>(cropImage))
+
+
             }
+        }
+        catch (e : Exception) {
+            emit(Resource.Error<Bitmap>(e.message?:"An error occurred "))
+        }
+
+        catch (e : NullPointerException) {
+            emit(Resource.Error<Bitmap>(e.message?:"An error occurred "))
         }catch (e : Throwable){
            emit(Resource.Error<Bitmap>(e.message?:"An error occurred "))
             println("error throwable ${e.message}")
-        }finally{
-            imageProxy.close()
-        }
+
+        } finally {
+                imageProxy.close()
+            }
+
     } .flowOn(Dispatchers.IO)
 
 
@@ -100,7 +123,7 @@ class FaceAnalyzerRepositoryImpl @Inject constructor(var  faceDetector: FaceDete
         val thresholdY = 0.4f * image.height
         offsetX <= thresholdX && offsetY <= thresholdY*/
        // face.headEulerAngleY>1 && face.headEulerAngleZ>1
-        return abs(face.headEulerAngleY) <=15 && abs(face.headEulerAngleZ) <=15
+        return abs(face.headEulerAngleY) <=15 && abs(face.headEulerAngleZ) <=15 && abs(face.headEulerAngleX)<=15
     }
 
     private fun cropToBBox(image: Bitmap, boundingBox: Rect, rotation: Int): Bitmap? {

@@ -45,7 +45,7 @@ class FaceNetModel(app: Application) {
     }
 
     // Gets an face embedding using FaceNet, use the `crop` rect.
-    @RequiresApi(Build.VERSION_CODES.O)
+  /*  @RequiresApi(Build.VERSION_CODES.O)
     fun getFaceEmbedding(image : Bitmap, crop : Rect, preRotate: Boolean ) : FloatArray {
         val v = image.byteCount
 
@@ -53,7 +53,7 @@ class FaceNetModel(app: Application) {
         val result = runFaceNet(cropResult)[0]
         return result
 
-    }
+    }*/
 
     // Gets an face embedding using the FaceNet model, given the cropped images.
     fun getFaceEmbeddingWithoutBBox( image : Bitmap ) : FloatArray {

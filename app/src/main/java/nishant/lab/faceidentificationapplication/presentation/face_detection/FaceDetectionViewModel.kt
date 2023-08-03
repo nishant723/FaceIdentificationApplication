@@ -5,7 +5,6 @@ import androidx.camera.core.ImageProxy
 
 import androidx.lifecycle.MutableLiveData
 import dagger.hilt.android.lifecycle.HiltViewModel
-import nishant.lab.faceidentificationapplication.domain.model.FaceAnalysisResult
 import nishant.lab.faceidentificationapplication.domain.use_case.FaceDetectionUseCase
 import android.graphics.Bitmap
 import android.util.Log
@@ -18,15 +17,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import nishant.lab.faceidentificationapplication.domain.model.Face
-import nishant.lab.faceidentificationapplication.domain.model.FaceStatus
+import nishant.lab.faceidentificationapplication.domain.model.*
 import nishant.lab.faceidentificationapplication.domain.use_case.FaceAnalyzerUseCase
 import nishant.lab.faceidentificationapplication.presentation.util.ImageConverter
 import nishant.lab.faceidentificationapplication.presentation.util.MyProcessViewModel
 import javax.inject.Inject
-import nishant.lab.faceidentificationapplication.domain.model.Result
-
-
 
 
 @HiltViewModel
@@ -42,15 +37,15 @@ class FaceDetectionViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 when(val result = faceAnalyzerUseCase.analyzeFace(imageProxy = imageProxy)){
-                    is  Result.Success -> {
+                    is  Resource.Success -> {
                         _faceResult.value = FaceStatus(bitMapImage = result.data)
                     }
-                     is Result.Error -> {
-                         _faceResult.value = FaceStatus(error = result.message)
+                     is Resource.Error -> {
+                         _faceResult.value = FaceStatus(error = result.message!!)
                      }
-                   /* is Result.Loading -> {
+                    is Resource.Loading -> {
                         _faceResult.value = FaceStatus(isLoading = true)
-                    }*/
+                    }
                  }
             }catch (e : Exception){
                 //__faceResult.value = FaceStatus(error = result.message)

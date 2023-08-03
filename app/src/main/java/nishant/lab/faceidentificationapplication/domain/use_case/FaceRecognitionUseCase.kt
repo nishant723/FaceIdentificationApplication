@@ -25,10 +25,10 @@ private val faceNetModel: FaceNetModel,private val faceAnalyzerRepository : Face
 
     suspend fun performFaceMatching(
         liveFace: ImageProxy?
-    ): Flow<Result<String>> = flow {
+    ): Flow<Resource<String>> = flow {
         // Check if liveFace is null or not
         if (liveFace == null) {
-            emit(Result.Error("No face to match"))
+            emit(Resource.Error<String>("No face to match"))
             return@flow
         }
 
@@ -40,7 +40,7 @@ private val faceNetModel: FaceNetModel,private val faceAnalyzerRepository : Face
                 is Resource.Success -> {
                     // Check if there is a face to match
                     if (repository.getNameByFace() == null) {
-                        emit(Result.Error("No face to match"))
+                        emit(Resource.Error<String>("No face to match"))
                     } else {
                         println("Coroutine started in thread in usecase: ${Thread.currentThread().name}")
                         val convertImageBitMap =
@@ -48,16 +48,23 @@ private val faceNetModel: FaceNetModel,private val faceAnalyzerRepository : Face
                         val result1 = faceNetModel.getFaceEmbeddingWithoutBBox(convertImageBitMap!!)
                         val result2 = faceNetModel.getFaceEmbeddingWithoutBBox(result.data!!)
                         val check = calculateSimilarityScore(result1, result2)
-                        if (check >= 0.5f) {
-                            emit(Result.Success(repository.getNameByFace().name))
-                        } else {
-                            emit(Result.Error("You are not registered"))
+                        if(check == null){
+                            emit(Resource.Error<String>(""))
+                        }else {
+                            println("FaceRecognitionUseCase : $check")
+                            if (check >= 0.5f) {
+                                emit(Resource.Success<String>(repository.getNameByFace().name))
+                            } else {
+                                emit(Resource.Error<String>("No face found"))
+                            }
                         }
+
                     }
                 }
-                is Resource.Error -> emit(Result.Error(result.message ?: "Unknown error"))
-               // is Resource.Loading -> emit(Result.Loading("Loading"))
+                is Resource.Error -> emit(Resource.Error<String>(result.message ?: "Unknown error"))
+                is Resource.Loading -> emit(Resource.Loading<String>())
 
+                else -> {}
             }
         }
     }.flowOn(Dispatchers.IO)
